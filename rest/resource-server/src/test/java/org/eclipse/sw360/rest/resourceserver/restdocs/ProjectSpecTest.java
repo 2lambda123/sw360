@@ -55,6 +55,7 @@ import org.eclipse.sw360.rest.resourceserver.attachment.Sw360AttachmentService;
 import org.eclipse.sw360.rest.resourceserver.licenseinfo.Sw360LicenseInfoService;
 import org.eclipse.sw360.rest.resourceserver.project.Sw360ProjectService;
 import org.eclipse.sw360.rest.resourceserver.release.Sw360ReleaseService;
+import org.eclipse.sw360.rest.resourceserver.report.SW360ReportService;
 import org.eclipse.sw360.rest.resourceserver.user.Sw360UserService;
 import org.eclipse.sw360.rest.resourceserver.vulnerability.Sw360VulnerabilityService;
 import org.hamcrest.Matchers;
@@ -133,6 +134,9 @@ public class ProjectSpecTest extends TestRestDocsSpecBase {
 
     @MockBean
     private Sw360VulnerabilityService vulnerabilityMockService;
+
+    @MockBean
+    private SW360ReportService sw360ReportServiceMock;
 
     private Project project;
     private Project sBOMProject;
@@ -1665,5 +1669,27 @@ public class ProjectSpecTest extends TestRestDocsSpecBase {
                 .header("Authorization", "Bearer " + accessToken)
                 .queryParam("type", "SPDX");
         this.mockMvc.perform(builder).andExpect(status().isOk()).andDo(this.documentationHandler.document());
+    }
+
+    @Test
+    public void should_document_get_project_report() throws Exception{
+        String accessToken = TestHelper.getAccessToken(mockMvc, testUserId, testUserPassword);
+        mockMvc.perform(get("/api/reports/myprojectreports")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .param("withlinkedreleases", "true")
+                        .param("mimetype", "xlsx")
+                        .param("mailrequest", "true")
+                        .accept(MediaTypes.HAL_JSON))
+                .andExpect(status().isOk())
+                .andDo(this.documentationHandler.document(
+                        requestParameters(
+                                parameterWithName("withlinkedreleases").description("Projects with linked releases. Possible values are `<true|false>`"),
+                                parameterWithName("mimetype").description("Projects download format. Possible values are `<xls|xlsx>`"),
+                                parameterWithName("mailrequest").description("Downloading project report requirted mail link. Possible values are `<true|false>`")
+                        ),responseFields(
+                                subsectionWithPath("response").description("The response message displayed").optional(),
+                                subsectionWithPath("url").description("The project download path will be displayed").optional()
+                                )
+                        ));
     }
 }

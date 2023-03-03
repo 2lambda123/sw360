@@ -73,6 +73,9 @@ import static org.eclipse.sw360.datahandler.common.SW360Utils.getCreatedOn;
 import static org.eclipse.sw360.datahandler.common.SW360Utils.printName;
 import static org.eclipse.sw360.datahandler.common.WrappedException.wrapTException;
 import static org.eclipse.sw360.datahandler.permissions.PermissionUtils.makePermission;
+import org.apache.commons.io.IOUtils;
+import org.eclipse.sw360.exporter.ProjectExporter;
+import java.nio.ByteBuffer;
 
 /**
  * Class for accessing the CouchDB database
@@ -85,6 +88,7 @@ import static org.eclipse.sw360.datahandler.permissions.PermissionUtils.makePerm
  */
 public class ProjectDatabaseHandler extends AttachmentAwareDatabaseHandler {
 
+    private static final String PROJECTS = "projects";
     private static final Logger log = LogManager.getLogger(ProjectDatabaseHandler.class);
     private static final int DELETION_SANITY_CHECK_THRESHOLD = 5;
     private static final String DUMMY_NEW_PROJECT_ID = "newproject";
@@ -1906,5 +1910,82 @@ public class ProjectDatabaseHandler extends AttachmentAwareDatabaseHandler {
 
     public ProjectData searchByType(String type, User user) {
         return repository.searchByType(type, user);
+    }
+
+    public ByteBuffer getReportDataStream(List<Project> documents, User user, String exporterObject, boolean extendedByReleases)
+            throws SW360Exception, TException {
+        ThriftClients thriftClients = new ThriftClients();
+        InputStream stream = null;
+        switch (exporterObject) {
+        case PROJECTS:
+            ProjectExporter exporter = getProjectExporterObject(documents, user, extendedByReleases, thriftClients);
+            try {
+                stream = exporter.makeExcelExport(documents);
+            } catch (SW360Exception e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            break;
+
+        default:
+            break;
+        }
+        try {
+            return ByteBuffer.wrap(IOUtils.toByteArray(stream));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private ProjectExporter getProjectExporterObject(List<Project> documents, User user, boolean extendedByReleases,
+            ThriftClients thriftClients) throws SW360Exception {
+        ProjectExporter exporter = new ProjectExporter(thriftClients.makeComponentClient(),
+                thriftClients.makeProjectClient(), user, documents, extendedByReleases);
+        return exporter;
+    }
+
+    public String getReportInEmail(List<Project> documents, User user, String exporterObject,
+            boolean extendedByReleases) throws SW360Exception, TException {
+        ThriftClients thriftClients = new ThriftClients();
+        String result = null;
+        switch (exporterObject) {
+        case PROJECTS:
+            ProjectExporter exporter = getProjectExporterObject(documents, user, extendedByReleases, thriftClients);
+            try {
+                result = exporter.makeExcelExportForProject(documents, user);
+            } catch (SW360Exception e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            break;
+
+        default:
+            break;
+        }
+        return result;
+    }
+
+    public ByteBuffer downloadExcel(User user, String exporterObject,boolean extendedByReleases,String token) throws SW360Exception {
+        ThriftClients thriftClients = new ThriftClients();
+        InputStream stream = null;
+        switch (exporterObject) {
+        case PROJECTS:
+            ProjectExporter exporter = new ProjectExporter(thriftClients.makeComponentClient(),
+                    thriftClients.makeProjectClient(), user, extendedByReleases);
+            stream = exporter.downloadExcelSheet(token);
+            break;
+
+        default:
+            break;
+        }
+        try {
+            return ByteBuffer.wrap(IOUtils.toByteArray(stream));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

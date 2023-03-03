@@ -43,6 +43,7 @@ import java.util.*;
 import java.util.function.Supplier;
 
 import static org.eclipse.sw360.datahandler.common.SW360Assert.*;
+import java.nio.ByteBuffer;
 
 /**
  * Implementation of the Thrift service
@@ -461,5 +462,22 @@ public class ProjectHandler implements ProjectService.Iface {
     @Override
     public void sendExportSpreadsheetSuccessMail(String url, String recepient) throws TException {
         handler.sendExportSpreadsheetSuccessMail(url, recepient);
+    }
+
+    @Override
+    public ByteBuffer getReportDataStream(List<Project> documents, User user, String exporterObject, boolean extendedByReleases) throws SW360Exception, TException {
+        return handler.getReportDataStream(documents,user,exporterObject,extendedByReleases);
+    }
+
+    @Override
+    public String getReportInEmail(List<Project> documents, User user, String exporterObject,
+            boolean extendedByReleases) throws SW360Exception, TException {
+        return handler.getReportInEmail(documents,user,exporterObject,extendedByReleases);
+    }
+
+    @Override
+    public ByteBuffer downloadExcel(User user, String exporterObject, boolean extendedByReleases, String token)
+            throws SW360Exception, TException {
+        return handler.downloadExcel(user, exporterObject,extendedByReleases,token);
     }
 }

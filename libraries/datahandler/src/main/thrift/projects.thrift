@@ -529,4 +529,17 @@ service ProjectService {
     * Send email to the user once spreadsheet export completed
     */
     void sendExportSpreadsheetSuccessMail(1: string url, 2: string userEmail);
+    /*
+    * make excel export
+    */
+    binary getReportDataStream(1: list<Project> documents, 2: User user, 3: string exporterObject, 4: bool extendedByReleases) throws (1: SW360Exception exp);
+     /*
+    * excel export - return the filepath
+    */
+    string getReportInEmail(1: list<Project> documents, 2: User user, 3: string exporterObject, 4: bool extendedByReleases) throws (1: SW360Exception exp);
+    /*
+    *
+    */
+    binary downloadExcel(1:User user, 2:string exporterObject,3:bool extendedByReleases,4:string token) throws (1: SW360Exception exp);
+
 }

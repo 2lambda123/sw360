@@ -650,3 +650,20 @@ include::{snippets}/should_document_import_sbom/curl-request.adoc[]
 
 ===== Example response
 include::{snippets}/should_document_import_sbom/http-response.adoc[]
+
+[[resources-projects-download-report]]
+==== Downloading project report
+
+A `GET` request help to download the projects report.
+
+===== Request parameter
+include::{snippets}/should_document_get_project_report/request-parameters.adoc[]
+
+===== Response structure
+include::{snippets}/should_document_get_project_report/response-fields.adoc[]
+
+===== Example request
+include::{snippets}/should_document_get_project_report/curl-request.adoc[]
+
+===== Example response
+include::{snippets}/should_document_get_project_report/http-response.adoc[]

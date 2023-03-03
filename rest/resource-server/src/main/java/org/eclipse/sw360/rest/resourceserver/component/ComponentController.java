@@ -449,5 +449,5 @@ public class ComponentController implements RepresentationModelProcessor<Reposit
                 componentResources);
         HttpStatus status = finalResources == null ? HttpStatus.NO_CONTENT : HttpStatus.OK;
         return new ResponseEntity<>(finalResources, status);
-    }
+}
 }
