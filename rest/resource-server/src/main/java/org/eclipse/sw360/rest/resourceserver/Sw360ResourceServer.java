@@ -10,9 +10,11 @@
 
 package org.eclipse.sw360.rest.resourceserver;
 
-import java.util.Properties;
-import java.util.Set;
-
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 import org.eclipse.sw360.datahandler.common.CommonUtils;
 import org.eclipse.sw360.rest.common.PropertyUtils;
 import org.eclipse.sw360.rest.common.Sw360CORSFilter;
@@ -32,6 +34,10 @@ import org.springframework.hateoas.mediatype.hal.CurieProvider;
 import org.springframework.hateoas.mediatype.hal.DefaultCurieProvider;
 import org.springframework.web.filter.ForwardedHeaderFilter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
 
 @SpringBootApplication
 @Import(Sw360CORSFilter.class)
@@ -108,5 +114,18 @@ public class Sw360ResourceServer extends SpringBootServletInitializer {
         FilterRegistrationBean<ForwardedHeaderFilter> bean = new FilterRegistrationBean<>();
         bean.setFilter(new ForwardedHeaderFilter());
         return bean;
+    }
+
+    @Bean
+    public OpenAPI customOpenAPI() {
+        Server server = new Server();
+        server.setUrl("http://localhost:8080/resource/api/");
+        return new OpenAPI()
+                .components(new Components().addSecuritySchemes("tokenAuth",
+                        new SecurityScheme().type(SecurityScheme.Type.APIKEY).name("Authorization")
+                                .in(SecurityScheme.In.HEADER)
+                                .description("Enter the token with the `Token ` prefix, e.g. \"Token abcde12345\".")))
+                .info(new Info().title("SW360 API"))
+                .servers(List.of(server));
     }
 }
