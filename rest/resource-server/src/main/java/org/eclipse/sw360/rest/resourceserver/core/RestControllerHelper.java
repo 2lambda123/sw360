@@ -295,7 +295,6 @@ public class RestControllerHelper<T> {
         User sw360User = getUserByEmail(leadArchitect);
         addEmbeddedUser(halResource, sw360User, "leadArchitect");
     }
-
     public void addEmbeddedReleases(
             HalResource halResource,
             Set<String> releases,
@@ -336,6 +335,23 @@ public class RestControllerHelper<T> {
 
     public HalResource<Vendor> addEmbeddedVendor(String vendorFullName) {
         Vendor embeddedVendor = convertToEmbeddedVendor(vendorFullName);
+        HalResource<Vendor> halVendor = new HalResource<>(embeddedVendor);
+        try {
+            Vendor vendorByFullName = vendorService.getVendorByFullName(vendorFullName);
+            if(vendorByFullName != null) {
+                Link vendorSelfLink = linkTo(UserController.class)
+                        .slash("api" + VendorController.VENDORS_URL + "/" + vendorByFullName.getId()).withSelfRel();
+                halVendor.add(vendorSelfLink);
+            }
+            return halVendor;
+        } catch (Exception e) {
+            LOGGER.error("cannot create self link for vendor with full name: " + vendorFullName);
+        }
+        return null;
+    }
+
+    public HalResource<Vendor> addEmbeddedVendorsummaryAdministration(String vendorFullName,String shortName,String url) {
+        Vendor embeddedVendor = convertToSummaryAdministration(vendorFullName,shortName,url);
         HalResource<Vendor> halVendor = new HalResource<>(embeddedVendor);
         try {
             Vendor vendorByFullName = vendorService.getVendorByFullName(vendorFullName);
@@ -644,7 +660,14 @@ public class RestControllerHelper<T> {
         embeddedVendor.setType(null);
         return embeddedVendor;
     }
-
+    public Vendor convertToSummaryAdministration(String fullName,String shortName,String url) {
+        Vendor embeddedVendor = new Vendor();
+        embeddedVendor.setFullname(fullName);
+        embeddedVendor.setShortname(shortName);
+        embeddedVendor.setUrl(url);
+        embeddedVendor.setType(null);
+        return embeddedVendor;
+    }
     public Attachment convertToEmbeddedAttachment(Attachment attachment) {
         attachment.setCreatedTeam(null);
         attachment.setCreatedComment(null);

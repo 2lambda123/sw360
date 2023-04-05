@@ -234,6 +234,51 @@ public class ProjectController implements RepresentationModelProcessor<Repositor
                 mapOfProjects, isSearchByName, sw360Projects, isNoFilter);
     }
 
+    @RequestMapping(value = PROJECTS_URL + "/{id}/summaryAdministration", method = RequestMethod.GET)
+    public ResponseEntity<EntityModel<Project>> getAdministration(
+            @PathVariable("id") String id) throws TException {
+        User sw360User = restControllerHelper.getSw360UserFromAuthentication();
+        Project sw360Project = projectService.getProjectForUserById(id, sw360User);
+        Map<String, String> sortedExternalURLs = CommonUtils.getSortedMap(sw360Project.getExternalUrls(), true);
+        sw360Project.setExternalUrls(sortedExternalURLs);
+        HalResource<Project> userHalResource = createHalSummaryAdministration(sw360Project, sw360User);
+        sw360Project.unsetLinkedProjects();
+        sw360Project.unsetReleaseIdToUsage();
+        return new ResponseEntity<>(userHalResource, HttpStatus.OK);
+    }
+
+    private HalResource<Project> createHalSummaryAdministration(Project sw360Project, User sw360User) throws TException {
+        HalResource<Project> halProject = new HalResource<>(sw360Project);
+        User projectCreator = restControllerHelper.getUserByEmail(sw360Project.getCreatedBy());
+        restControllerHelper.addEmbeddedUser(halProject, projectCreator, "createdBy");
+
+        if (sw360Project.getModerators() != null) {
+            Set<String> moderators = sw360Project.getModerators();
+            restControllerHelper.addEmbeddedModerators(halProject, moderators);
+        }
+
+        if (sw360Project.getAttachments() != null) {
+            restControllerHelper.addEmbeddedAttachments(halProject, sw360Project.getAttachments());
+        }
+
+        if(sw360Project.getLeadArchitect() != null) {
+            restControllerHelper.addEmbeddedLeadArchitect(halProject, sw360Project.getLeadArchitect());
+        }
+
+        if (sw360Project.getContributors() != null) {
+            Set<String> contributors = sw360Project.getContributors();
+            restControllerHelper.addEmbeddedContributors(halProject, contributors);
+        }
+        if (sw360Project.getVendor() != null) {
+            Vendor vendor = sw360Project.getVendor();
+            HalResource<Vendor> vendorHalResource = restControllerHelper.addEmbeddedVendorsummaryAdministration(vendor.getFullname(),vendor.getShortname(),vendor.getUrl());
+            halProject.addEmbeddedResource("sw360:vendors", vendorHalResource);
+            sw360Project.setVendor(null);
+        }
+
+        return halProject;
+    }
+
     @NotNull
     private ResponseEntity<CollectionModel<EntityModel<Project>>> getProjectResponse(Pageable pageable,
                                                                                      String projectType, String group, String tag, boolean allDetails, boolean luceneSearch,

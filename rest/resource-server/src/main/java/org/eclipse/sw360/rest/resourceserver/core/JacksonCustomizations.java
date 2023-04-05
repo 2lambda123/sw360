@@ -112,7 +112,6 @@ public class JacksonCustomizations {
                 "attachments",
                 "createdBy",
                 "visbility",
-                "clearingTeam",
                 "homepage",
                 "wiki",
                 "documentState",
@@ -192,14 +191,11 @@ public class JacksonCustomizations {
                 "setConsiderReleasesFromExternalList",
                 "externalUrlsSize",
                 "setExternalUrls",
-                "externalUrls",
                 "setVendor",
                 "setVendorId",
                 "setSpdxId",
                 "setModifiedOn",
-                "modifiedOn",
                 "setModifiedBy",
-                "modifiedBy"
         })
         static abstract class ProjectMixin extends Project {
 
