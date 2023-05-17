@@ -13,6 +13,7 @@ package org.eclipse.sw360.rest.resourceserver.report;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,9 @@ import org.apache.thrift.TException;
 import org.eclipse.sw360.datahandler.thrift.PaginationData;
 import org.eclipse.sw360.datahandler.thrift.SW360Exception;
 import org.eclipse.sw360.datahandler.thrift.ThriftClients;
+import org.eclipse.sw360.datahandler.thrift.components.Component;
+import org.eclipse.sw360.datahandler.thrift.components.ComponentService;
+import org.eclipse.sw360.datahandler.thrift.components.ComponentService.Iface;
 import org.eclipse.sw360.datahandler.thrift.projects.Project;
 import org.eclipse.sw360.datahandler.thrift.projects.ProjectService;
 import org.eclipse.sw360.datahandler.thrift.users.User;
@@ -68,5 +72,40 @@ public class SW360ReportService {
     public ByteBuffer getReportStreamFromURl(ProjectService.Iface client,User user, String exporterObject,boolean extendedByReleases, String token) 
             throws TException, SW360Exception{
         return client.downloadExcel(user,exporterObject,extendedByReleases, token);
+    }
+
+    public ByteBuffer getComponentReportStreamFromURl(ComponentService.Iface client,User user, String exporterObject,boolean extendedByReleases, String token) 
+            throws TException, SW360Exception{
+        return client.downloadExcel(user, extendedByReleases, token);
+    }
+
+    public String getUploadedComponentPath(User sw360User, Iface client, boolean withLinkedReleases) throws TException{
+        List<Component> listOfComponents = getComponentList(client, sw360User);
+        return client.getReportInEmail(listOfComponents, sw360User, withLinkedReleases);
+    }
+
+    private List<Component> getComponentList(Iface client, User sw360User) throws TException {
+        int total = client.getTotalComponentsCount(sw360User);
+        PaginationData pageData = new PaginationData();
+        pageData.setAscending(true);
+        Map<PaginationData, List<Component>> pageDtToComponenents;
+        Set<Component> components = new HashSet<>();
+        int displayStart = 0;
+        int rowsPerPage = 500;
+        while (0 < total) {
+            pageData.setDisplayStart(displayStart);
+            pageData.setRowsPerPage(rowsPerPage);
+            displayStart = displayStart + rowsPerPage;
+            pageDtToComponenents = client.getRecentComponentsSummaryWithPagination(sw360User, pageData);
+            components.addAll(pageDtToComponenents.entrySet().iterator().next().getValue());
+            total = total - rowsPerPage;
+        }
+        return new ArrayList<Component>(components);
+    }
+
+    public ByteBuffer getComponentBuffer(User sw360User, Iface client, boolean withLinkedReleases) throws SW360Exception, TException{
+        List<Component> listOfComponents = getComponentList(client, sw360User);
+        ByteBuffer buffer = client.getReportDataStream(listOfComponents, sw360User, withLinkedReleases);
+        return buffer;
     }
 }
